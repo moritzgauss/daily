@@ -18,37 +18,32 @@
       font-family: Helvetica, Arial, sans-serif;
       display: flex;
       flex-direction: column;
-      align-items: center; /* Zentriere den Inhalt horizontal */
-      justify-content: flex-start; /* Zentriere den Inhalt vertikal oben */
+      align-items: center;
+      justify-content: center;
       margin: 0;
       padding: 20px;
-      height: 100vh;
+      height: 100%;
       background-color: #f4f4f4;
     }
     #calendar {
+      width: 90%;
       max-width: 100%;
     }
     #time {
-      margin-top: 20px; /* Abstand zwischen SVG und Uhrzeit */
+      margin-top: 20px;
       font-size: 64px;
       color: red;
       font-weight: bold;
-      text-align: center; /* Zentriert die Uhrzeit */
+      text-align: center;
     }
     @media (max-width: 768px) {
-      #calendar {
-        transform: scale(0.8); /* Verkleinere SVG auf kleineren Geräten */
-      }
       #time {
-        font-size: 48px; /* Kleinere Schriftgröße für die Uhrzeit */
+        font-size: 36px;
       }
     }
     @media (max-width: 480px) {
-      #calendar {
-        transform: scale(0.6); /* Noch kleinere SVG für sehr kleine Geräte */
-      }
       #time {
-        font-size: 36px; /* Noch kleinere Schriftgröße für die Uhrzeit */
+        font-size: 24px;
       }
     }
   </style>
@@ -60,16 +55,16 @@
   <script>
     function createMonthSVG(month, daysInMonth, startDay) {
       const xmlns = "http://www.w3.org/2000/svg";
-      const baseWidth = 297; // A3 Breite
-      const baseHeight = 420; // A3 Höhe
+      const baseWidth = 400; // Vergrößerte Breite für bessere mobile Darstellung
+      const baseHeight = 400; // Vergrößerte Höhe für bessere mobile Darstellung
 
       const svg = document.createElementNS(xmlns, "svg");
       svg.setAttribute("xmlns", xmlns);
       svg.setAttribute("viewBox", `0 0 ${baseWidth} ${baseHeight}`);
-      svg.setAttribute("width", `${baseWidth}mm`);
-      svg.setAttribute("height", `${baseHeight}mm`);
+      svg.setAttribute("width", "100%");
+      svg.setAttribute("height", "auto");
 
-      // Hintergrundtext für den Monat (groß, rot und gedreht)
+      // Hintergrundtext für den Monat
       const monthText = document.createElementNS(xmlns, "text");
       monthText.setAttribute("x", baseWidth / 2);
       monthText.setAttribute("y", baseHeight / 2);
@@ -85,7 +80,7 @@
       monthText.textContent = month;
       svg.appendChild(monthText);
 
-      // Wochentage (auf Deutsch)
+      // Wochentage
       const weekdays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
       const spiralRadius = 30;
       const spacing = 24;
@@ -93,6 +88,8 @@
       const today = new Date();
 
       let dayOfWeek = startDay;
+      const positions = {}; // Speichert die Positionen für jeden Wochentag
+
       for (let i = 1; i <= daysInMonth; i++) {
         const angle = i * angleStep;
         const radius = spiralRadius + (i * spacing) / 7;
@@ -100,35 +97,54 @@
         const x = baseWidth / 2 + radius * Math.cos(angle);
         const y = baseHeight / 2 + radius * Math.sin(angle);
 
-        // Wochentag hinzufügen
-        const weekdayText = weekdays[dayOfWeek] + " " + String(i).padStart(2, "0");
-        const weekdayTextElement = document.createElementNS(xmlns, "text");
-        weekdayTextElement.setAttribute("x", x);
-        weekdayTextElement.setAttribute("y", y + 5);
-        weekdayTextElement.setAttribute("text-anchor", "middle");
-        weekdayTextElement.setAttribute("dominant-baseline", "middle");
-        weekdayTextElement.setAttribute("font-size", "8");
-        weekdayTextElement.setAttribute("font-family", "Helvetica");
-        weekdayTextElement.setAttribute("font-weight", "bold");
-        weekdayTextElement.textContent = weekdayText;
+        // Zahl hinzufügen
+        const dayTextElement = document.createElementNS(xmlns, "text");
+        dayTextElement.setAttribute("x", x);
+        dayTextElement.setAttribute("y", y);
+        dayTextElement.setAttribute("text-anchor", "middle");
+        dayTextElement.setAttribute("dominant-baseline", "middle");
+        dayTextElement.setAttribute("font-size", "8");
+        dayTextElement.setAttribute("font-family", "Helvetica");
+        dayTextElement.setAttribute("font-weight", "bold");
+        dayTextElement.textContent = `${String(i).padStart(2, "0")}`;
 
-        // Markiere den aktuellen Tag mit einem blauen Kreis
+        // Markiere den aktuellen Tag mit einem roten Kreis
         if (today.getDate() === i) {
           const circle = document.createElementNS(xmlns, "circle");
           circle.setAttribute("cx", x);
           circle.setAttribute("cy", y);
-          circle.setAttribute("r", 8);
+          circle.setAttribute("r", 10);
           circle.setAttribute("fill", "none");
-          circle.setAttribute("stroke", "blue");
+          circle.setAttribute("stroke", "red");
           circle.setAttribute("stroke-width", 2);
           svg.appendChild(circle);
         }
 
-        svg.appendChild(weekdayTextElement);
+        svg.appendChild(dayTextElement);
+
+        // Speichere die Position für den jeweiligen Wochentag
+        positions[dayOfWeek] = { x, y };
 
         // Wochentag für den nächsten Tag anpassen
         dayOfWeek = (dayOfWeek + 1) % 7;
       }
+
+      // Füge die Wochentage an den jeweiligen Endpositionen hinzu
+      weekdays.forEach((weekday, index) => {
+        if (positions[index]) {
+          const { x, y } = positions[index];
+          const weekdayTextElement = document.createElementNS(xmlns, "text");
+          weekdayTextElement.setAttribute("x", x);
+          weekdayTextElement.setAttribute("y", y - 15);
+          weekdayTextElement.setAttribute("text-anchor", "middle");
+          weekdayTextElement.setAttribute("dominant-baseline", "middle");
+          weekdayTextElement.setAttribute("font-size", "10");
+          weekdayTextElement.setAttribute("font-family", "Helvetica");
+          weekdayTextElement.setAttribute("font-weight", "bold");
+          weekdayTextElement.textContent = weekday;
+          svg.appendChild(weekdayTextElement);
+        }
+      });
 
       return svg;
     }
