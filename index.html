@@ -18,18 +18,38 @@
       font-family: Helvetica, Arial, sans-serif;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      align-items: center; /* Zentriere den Inhalt horizontal */
+      justify-content: flex-start; /* Zentriere den Inhalt vertikal oben */
       margin: 0;
-      padding: 0;
-      height: 100%;
+      padding: 20px;
+      height: 100vh;
       background-color: #f4f4f4;
     }
+    #calendar {
+      max-width: 100%;
+    }
     #time {
-      margin: 20px;
+      margin-top: 20px; /* Abstand zwischen SVG und Uhrzeit */
       font-size: 64px;
       color: red;
       font-weight: bold;
+      text-align: center; /* Zentriert die Uhrzeit */
+    }
+    @media (max-width: 768px) {
+      #calendar {
+        transform: scale(0.8); /* Verkleinere SVG auf kleineren Geräten */
+      }
+      #time {
+        font-size: 48px; /* Kleinere Schriftgröße für die Uhrzeit */
+      }
+    }
+    @media (max-width: 480px) {
+      #calendar {
+        transform: scale(0.6); /* Noch kleinere SVG für sehr kleine Geräte */
+      }
+      #time {
+        font-size: 36px; /* Noch kleinere Schriftgröße für die Uhrzeit */
+      }
     }
   </style>
 </head>
@@ -40,25 +60,26 @@
   <script>
     function createMonthSVG(month, daysInMonth, startDay) {
       const xmlns = "http://www.w3.org/2000/svg";
-      const a3Width = 297; // in mm
-      const a3Height = 420; // in mm
+      const baseWidth = 297; // A3 Breite
+      const baseHeight = 420; // A3 Höhe
+
       const svg = document.createElementNS(xmlns, "svg");
       svg.setAttribute("xmlns", xmlns);
-      svg.setAttribute("viewBox", `0 0 ${a3Width} ${a3Height}`);
-      svg.setAttribute("width", `${a3Width}mm`);
-      svg.setAttribute("height", `${a3Height}mm`);
+      svg.setAttribute("viewBox", `0 0 ${baseWidth} ${baseHeight}`);
+      svg.setAttribute("width", `${baseWidth}mm`);
+      svg.setAttribute("height", `${baseHeight}mm`);
 
       // Hintergrundtext für den Monat (groß, rot und gedreht)
       const monthText = document.createElementNS(xmlns, "text");
-      monthText.setAttribute("x", a3Width / 2);
-      monthText.setAttribute("y", a3Height / 2);
+      monthText.setAttribute("x", baseWidth / 2);
+      monthText.setAttribute("y", baseHeight / 2);
       monthText.setAttribute("text-anchor", "middle");
       monthText.setAttribute("dominant-baseline", "middle");
       monthText.setAttribute("font-size", "86");
       monthText.setAttribute("fill", "rgb(255, 0, 0)");
       monthText.setAttribute(
         "transform",
-        "rotate(-90 " + a3Width / 2 + "," + a3Height / 2 + ")"
+        `rotate(-90 ${baseWidth / 2},${baseHeight / 2})`
       );
       monthText.setAttribute("font-family", "Helvetica");
       monthText.textContent = month;
@@ -66,27 +87,24 @@
 
       // Wochentage (auf Deutsch)
       const weekdays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-
-      // Spiral für den Monat
-      const spiralRadius = 40;
+      const spiralRadius = 30;
       const spacing = 24;
       const angleStep = (2 * Math.PI) / 7;
       const today = new Date();
 
-      // Korrekte Berechnung des Wochentags für den ersten Tag (startDay)
       let dayOfWeek = startDay;
       for (let i = 1; i <= daysInMonth; i++) {
         const angle = i * angleStep;
         const radius = spiralRadius + (i * spacing) / 7;
 
-        const x = a3Width / 2 + radius * Math.cos(angle);
-        const y = a3Height / 2 + radius * Math.sin(angle);
+        const x = baseWidth / 2 + radius * Math.cos(angle);
+        const y = baseHeight / 2 + radius * Math.sin(angle);
 
         // Wochentag hinzufügen
         const weekdayText = weekdays[dayOfWeek] + " " + String(i).padStart(2, "0");
         const weekdayTextElement = document.createElementNS(xmlns, "text");
         weekdayTextElement.setAttribute("x", x);
-        weekdayTextElement.setAttribute("y", y + 7);
+        weekdayTextElement.setAttribute("y", y + 5);
         weekdayTextElement.setAttribute("text-anchor", "middle");
         weekdayTextElement.setAttribute("dominant-baseline", "middle");
         weekdayTextElement.setAttribute("font-size", "8");
@@ -99,10 +117,10 @@
           const circle = document.createElementNS(xmlns, "circle");
           circle.setAttribute("cx", x);
           circle.setAttribute("cy", y);
-          circle.setAttribute("r", 10);
+          circle.setAttribute("r", 8);
           circle.setAttribute("fill", "none");
           circle.setAttribute("stroke", "blue");
-          circle.setAttribute("stroke-width", 4);
+          circle.setAttribute("stroke-width", 2);
           svg.appendChild(circle);
         }
 
@@ -123,12 +141,12 @@
       const year = now.getFullYear();
       const month = now.toLocaleString("de-DE", { month: "long" });
       const daysInMonth = new Date(year, now.getMonth() + 1, 0).getDate();
-      const startDay = new Date(year, now.getMonth(), 1).getDay(); // Starttag des Monats
+      const startDay = new Date(year, now.getMonth(), 1).getDay();
 
       const svg = createMonthSVG(
         month.toUpperCase(),
         daysInMonth,
-        startDay === 0 ? 6 : startDay - 1 // Sonntag = letzter Tag der Woche
+        startDay === 0 ? 6 : startDay - 1
       );
 
       calendarDiv.appendChild(svg);
@@ -140,10 +158,9 @@
       timeDiv.textContent = now.toLocaleTimeString("de-DE");
     }
 
-    // Initialisieren
     updateCalendar();
     updateTime();
-    setInterval(updateTime, 1000); // Zeit jede Sekunde aktualisieren
+    setInterval(updateTime, 1000);
   </script>
 </body>
 </html>
